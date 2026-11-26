@@ -21,7 +21,6 @@ A zero-dependency **Confession Wall** built around a single expressive **Chat-Bo
 ## Quick Start
 
 ```bash
-cd confession-wall-vanilla
 python3 -m http.server 8080
 ```
-Open [http://localhost:8080/index.html](http://localhost:8080/index.html).
+Open [http://localhost:8080](http://localhost:8080), or visit the live GitHub Pages site at [https://willygailo.github.io/Free/](https://willygailo.github.io/Free/).
