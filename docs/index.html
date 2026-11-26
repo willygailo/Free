@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Confession Wall — Open, Anonymous &amp; AI Advice</title>
+  <meta
+    name="description"
+    content="Open confession wall for everyone: share anonymous confessions, reply, bookmark, react with emojis, and get Payo AI advice in pure HTML, CSS, and Vanilla JS."
+  />
+  <link rel="stylesheet" href="css/styles.css" />
+  <script defer src="js/store.js"></script>
+  <script defer src="js/ai.js"></script>
+  <script defer src="js/app.js"></script>
+</head>
+<body>
+  <header class="navbar">
+    <div class="container navbar-inner">
+      <a href="index.html" class="brand" id="brandLink">
+        <span class="brand-icon" aria-hidden="true">🔥</span>
+        <span class="brand-text">
+          <span class="brand-title">Confession Wall</span>
+          <span class="brand-subtitle">Open to Everyone • Anonymous</span>
+        </span>
+      </a>
+
+      <nav class="nav-actions" aria-label="Primary navigation">
+        <a href="#advice" class="btn btn-ghost btn-sm" id="navAdviceBtn">
+          <span aria-hidden="true">💬</span>
+          <span>AI Advice</span>
+        </a>
+        <button type="button" class="btn btn-ghost btn-sm" id="surpriseBtn" title="Read a random confession">
+          <span aria-hidden="true">🔀</span>
+          <span class="hide-sm">Surprise Me</span>
+        </button>
+        <button type="button" class="btn btn-ghost btn-sm" id="themeToggleBtn" title="Toggle light/dark theme" aria-label="Toggle theme">
+          🌙
+        </button>
+        <button type="button" class="btn btn-ghost btn-sm" id="settingsBtn" title="AI &amp; Data Settings">
+          <span aria-hidden="true">⚙️</span>
+          <span class="hide-sm">Settings</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container main-content">
+    <!-- Permalink View (URL hash #confession=<id>) -->
+    <section id="permalinkSection" class="stack hidden" aria-live="polite">
+      <div class="toolbar-row">
+        <a href="index.html" id="backToWallBtn" class="back-link">← Back to Confession Wall</a>
+        <div class="toolbar-actions">
+          <button type="button" class="btn btn-ghost btn-sm" id="permalinkRandomBtn">
+            🔀 Another Random
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" id="permalinkCopyBtn">
+            🔗 Share Link
+          </button>
+        </div>
+      </div>
+      <div id="permalinkContainer"></div>
+    </section>
+
+    <!-- Private AI Advice View (URL hash #advice) -->
+    <section id="adviceSection" class="stack-lg hidden" aria-live="polite">
+      <div class="toolbar-row">
+        <a href="index.html" id="adviceBackBtn" class="back-link">← Back to Confession Wall</a>
+        <div class="toolbar-actions">
+          <button type="button" class="btn btn-secondary btn-sm hidden" id="shareAdviceToWallBtn">
+            🔗 Share Last Thought to Wall
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm hidden" id="clearAdviceBtn">
+            ↺ New Session
+          </button>
+        </div>
+      </div>
+
+      <div class="glass-card form-card stack">
+        <div class="card-header-row">
+          <div>
+            <h1 class="section-heading">💬 Payo AI — Say Anything, Get Advice</h1>
+            <p class="muted-sub">
+              Sabihin mo lahat ng gusto mong sabihin (English, Tagalog, o Taglish). Private sa browser mo at si AI ang bahalang magpayo.
+            </p>
+          </div>
+          <span class="pill-badge hide-sm">🔒 Private Session</span>
+        </div>
+
+        <div id="personaGrid" class="persona-grid" role="radiogroup" aria-label="AI Advisor Persona"></div>
+      </div>
+
+      <div id="adviceStarterBox" class="glass-card form-card stack-sm">
+        <p class="field-label">✨ Need a starting point? Click one or write freely below:</p>
+        <div id="adviceStarters" class="prompt-grid"></div>
+      </div>
+
+      <div id="adviceThread" class="stack"></div>
+
+      <form id="adviceForm" class="glass-card form-card stack-sm" novalidate>
+        <textarea
+          id="adviceInput"
+          class="textarea"
+          rows="4"
+          maxlength="3000"
+          placeholder="Sabihin mo kahit ano... (Ctrl+Enter to send)"
+          aria-label="Message for AI advice"
+        ></textarea>
+        <div class="form-footer">
+          <span id="adviceCharCounter" class="char-counter">0 / 3000</span>
+          <button type="submit" id="adviceSubmitBtn" class="btn btn-primary" disabled>
+            ✉️ Ask AI for Advice
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Main Wall View -->
+    <div id="wallSection" class="stack-lg">
+      <section class="glass-card form-card" aria-labelledby="formHeading">
+        <div class="card-header-row">
+          <div>
+            <h1 id="formHeading" class="section-heading">Confess something anonymously</h1>
+            <p class="muted-sub">Open to everyone — no login needed. Instant AI reaction &amp; advice.</p>
+          </div>
+          <a href="#advice" class="pill-badge">💬 Need private AI advice?</a>
+        </div>
+
+        <form id="confessionForm" class="stack-sm mt-3" novalidate>
+          <div id="formCategoryChips" class="chip-row" role="radiogroup" aria-label="Confession category"></div>
+          <div id="formMoodChips" class="chip-row" role="radiogroup" aria-label="Optional mood badge"></div>
+
+          <div>
+            <textarea
+              id="confessionInput"
+              class="textarea"
+              rows="4"
+              maxlength="1050"
+              placeholder="What's on your mind that you can't tell anyone else... (Ctrl+Enter to post)"
+              aria-label="Confession text"
+            ></textarea>
+            <p id="inputError" class="field-error hidden"></p>
+          </div>
+
+          <div class="form-footer">
+            <span id="charCounter" class="char-counter">0 / 1000</span>
+            <button type="submit" id="submitBtn" class="btn btn-primary" disabled>
+              ✉️ Post Anonymously
+            </button>
+          </div>
+        </form>
+
+        <div id="formFeedback" class="alert hidden" role="status"></div>
+      </section>
+
+      <section class="stack" aria-labelledby="feedHeading">
+        <div class="toolbar-row">
+          <div class="toolbar-title-group">
+            <h2 id="feedHeading" class="feed-heading">Latest Confessions</h2>
+            <span id="totalBadge" class="count-pill">0</span>
+            <span id="modeBadge" class="pill-badge">✨ Open Wall • Built-in AI</span>
+          </div>
+
+          <div class="toolbar-actions">
+            <button type="button" id="savedFilterBtn" class="chip" aria-pressed="false">
+              🔖 Saved (0)
+            </button>
+            <div class="segmented" role="group" aria-label="Sort confessions">
+              <button type="button" class="seg-btn active" data-sort="newest">Newest</button>
+              <button type="button" class="seg-btn" data-sort="top">🔥 Top</button>
+            </div>
+            <button type="button" id="refreshBtn" class="btn btn-secondary btn-sm">
+              ↻ <span class="hide-sm">Refresh</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="stack-sm">
+          <div class="search-wrap">
+            <span class="search-icon" aria-hidden="true">🔍</span>
+            <input
+              type="search"
+              id="searchInput"
+              class="input search-input"
+              placeholder="Search confessions by keyword..."
+              aria-label="Search confessions"
+            />
+            <button type="button" id="clearSearchBtn" class="search-clear hidden" aria-label="Clear search">✕</button>
+          </div>
+
+          <div id="filterCategoryChips" class="chip-row" role="group" aria-label="Filter by category"></div>
+        </div>
+
+        <div id="confessionList" class="stack"></div>
+
+        <div id="loadMoreWrap" class="center-row hidden">
+          <button type="button" id="loadMoreBtn" class="btn btn-secondary">
+            Load More Confessions
+          </button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <p>Confessions are anonymous and open to everyone. Pure HTML, CSS &amp; Vanilla JavaScript.</p>
+      <div class="footer-links">
+        <a href="index.html">Wall</a>
+        <a href="#advice">AI Advice</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Settings & Data Modal -->
+  <div id="settingsModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="glass-card modal-card stack">
+      <div class="modal-header">
+        <h3 id="settingsTitle">AI &amp; Data Settings</h3>
+        <button type="button" class="icon-btn" id="closeSettingsModal" aria-label="Close settings">✕</button>
+      </div>
+      <form id="settingsForm" class="stack-sm">
+        <label class="field-label" for="aiProxyUrlInput">
+          Optional AI Proxy Base URL (e.g. <code>http://localhost:3000</code>)
+        </label>
+        <input
+          type="url"
+          id="aiProxyUrlInput"
+          class="input"
+          placeholder="Leave blank to use built-in browser AI engine"
+        />
+        <p class="muted-sub">
+          When set, calls <code>&lt;url&gt;/api/ai/moderate</code>, <code>/api/ai/react</code>, and <code>/api/ai/advice</code> (with automatic fallback if offline).
+        </p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost btn-sm" id="resetSettingsBtn">Use Built-in AI</button>
+          <button type="submit" class="btn btn-primary btn-sm">Save Settings</button>
+        </div>
+      </form>
+
+      <div class="stack-sm">
+        <p class="field-label">Local Backup &amp; Demo Data</p>
+        <div class="toolbar-actions">
+          <button type="button" id="exportJsonBtn" class="btn btn-secondary btn-sm">⬇ Export JSON</button>
+          <label class="btn btn-secondary btn-sm file-label">
+            ⬆ Import JSON
+            <input type="file" id="importJsonInput" accept="application/json" class="sr-only" />
+          </label>
+          <button type="button" id="resetDemoBtn" class="btn btn-ghost btn-sm">↺ Reset Demo Wall</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+</body>
+</html>
