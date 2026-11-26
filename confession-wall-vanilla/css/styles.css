@@ -27,6 +27,79 @@
   --radius-full: 9999px;
 }
 
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg-top: #f5f3ff;
+  --bg-base: #f4f4f5;
+  --bg-deep: #e4e4e7;
+  --card-bg: rgba(255, 255, 255, 0.88);
+  --card-border: rgba(212, 212, 216, 0.9);
+  --card-hover: rgba(139, 92, 246, 0.45);
+  --text-main: #18181b;
+  --text-muted: #52525b;
+  --text-dim: #71717a;
+  --accent: #7c3aed;
+  --accent-hover: #6d28d9;
+  --accent-soft: rgba(124, 58, 237, 0.12);
+  --accent-border: rgba(124, 58, 237, 0.35);
+  --success: #047857;
+  --success-bg: rgba(209, 250, 229, 0.75);
+  --success-border: rgba(16, 185, 129, 0.4);
+  --warning: #b45309;
+  --warning-bg: rgba(254, 243, 199, 0.8);
+  --warning-border: rgba(245, 158, 11, 0.4);
+  --danger: #be123c;
+  --danger-bg: rgba(255, 228, 230, 0.85);
+  --danger-border: rgba(244, 63, 94, 0.4);
+}
+
+:root[data-theme="light"] .navbar {
+  background: rgba(255, 255, 255, 0.86);
+  border-bottom-color: rgba(212, 212, 216, 0.9);
+}
+
+:root[data-theme="light"] .textarea,
+:root[data-theme="light"] .input,
+:root[data-theme="light"] .pill-badge,
+:root[data-theme="light"] .chip,
+:root[data-theme="light"] .react-btn,
+:root[data-theme="light"] .persona-card,
+:root[data-theme="light"] .prompt-chip,
+:root[data-theme="light"] .advice-steps-box,
+:root[data-theme="light"] .reply-item,
+:root[data-theme="light"] .segmented {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(212, 212, 216, 0.95);
+  color: var(--text-main);
+}
+
+:root[data-theme="light"] .confession-body,
+:root[data-theme="light"] .ai-comment,
+:root[data-theme="light"] .advice-summary,
+:root[data-theme="light"] .advice-steps-list,
+:root[data-theme="light"] .field-label {
+  color: var(--text-main);
+}
+
+:root[data-theme="light"] .ai-bubble {
+  background: rgba(237, 233, 254, 0.75);
+}
+
+:root[data-theme="light"] .ai-label,
+:root[data-theme="light"] .advice-followup {
+  color: #6d28d9;
+}
+
+:root[data-theme="light"] .advice-pill-btn {
+  background: rgba(237, 233, 254, 0.85);
+  color: #5b21b6;
+}
+
+:root[data-theme="light"] .toast {
+  background: #ffffff;
+  color: #18181b;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -885,6 +958,85 @@ code {
 
 .advice-pill-btn:hover {
   background: rgba(124, 58, 237, 0.32);
+}
+
+.file-label {
+  cursor: pointer;
+}
+
+.icon-btn.saved {
+  color: #fbbf24;
+}
+
+.mood-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--accent-border);
+  background: var(--accent-soft);
+  font-size: 0.68rem;
+  color: var(--text-main);
+}
+
+.card-action-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.reply-drawer {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--card-border);
+  background: rgba(9, 9, 11, 0.35);
+  padding: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.reply-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.reply-item {
+  border-radius: 0.6rem;
+  border: 1px solid rgba(63, 63, 70, 0.65);
+  background: rgba(24, 24, 27, 0.7);
+  padding: 0.55rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.reply-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  color: var(--text-dim);
+}
+
+.reply-text {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.reply-form {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.edit-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
 }
 
 @media (max-width: 600px) {

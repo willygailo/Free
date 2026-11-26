@@ -78,29 +78,56 @@
   }
 
   function detectTagalog(text) {
-    return /\b(ako|ko|ka|mo|naman|kasi|pero|hindi|di|yung|lang|sana|paano|mahal|pagod|trabaho|pamilya|gusto|ayoko|nahihirapan|talaga|sobra|ba)\b/i.test(
+    return /\b(ako|ko|ka|mo|naman|kasi|pero|hindi|di|yung|lang|sana|paano|mahal|pagod|trabaho|pamilya|gusto|ayoko|nahihirapan|talaga|sobra|ba|bakit|siya|niya)\b/i.test(
       text
     );
   }
 
+  function detectTopic(text) {
+    if (/\b(suicide|kill myself|end my life|magpakamatay|ayoko na mabuhay|self-harm|hurt myself)\b/i.test(text)) {
+      return 'crisis';
+    }
+    if (/\b(love|crush|feelings|confess|partner|boyfriend|girlfriend|ex|relationship|breakup|mahal|jowa|relasyon|hiwalay|pag-ibig|ligaw)\b/.test(text)) {
+      return 'love';
+    }
+    if (/\b(work|boss|job|resign|burnout|salary|career|trabaho|sahod|office)\b/.test(text)) {
+      return 'work';
+    }
+    if (/\b(school|exam|grade|college|thesis|professor|study|aral|klase|pasado|bagsak)\b/.test(text)) {
+      return 'school';
+    }
+    if (/\b(family|parents|mom|dad|mother|father|sibling|pamilya|nanay|tatay|magulang|kapatid|kaibigan|friend|friends)\b/.test(text)) {
+      return 'family';
+    }
+    if (/\b(anxious|anxiety|panic|overthink|overwhelmed|scared|fear|takot|kaba|stress|stressed|lonely|sad|depressed|lungkot|pagod)\b/.test(text)) {
+      return 'anxiety';
+    }
+    return 'general';
+  }
+
   function localAdvise(messages, persona) {
     var list = Array.isArray(messages) ? messages : [];
-    var lastUser = '';
-    for (var i = list.length - 1; i >= 0; i -= 1) {
-      if (list[i] && list[i].role === 'user') {
-        lastUser = String(list[i].content || '');
-        break;
-      }
+    var userMessages = list
+      .filter(function (m) {
+        return m && m.role === 'user' && m.content;
+      })
+      .map(function (m) {
+        return String(m.content);
+      });
+
+    var lastUser = userMessages[userMessages.length - 1] || '';
+    var combinedHistory = userMessages.join(' ').toLowerCase();
+    var lastLower = lastUser.toLowerCase();
+    var isTaglish = detectTagalog(combinedHistory) || persona === 'taglish_bestie';
+    var isFollowUp = userMessages.length > 1;
+
+    // Prioritize latest message topic, falling back to full thread context on follow-ups
+    var topic = detectTopic(lastLower);
+    if (topic === 'general' && isFollowUp) {
+      topic = detectTopic(combinedHistory);
     }
 
-    var lower = lastUser.toLowerCase();
-    var isTaglish = detectTagalog(lower) || persona === 'taglish_bestie';
-    var isFollowUp =
-      list.filter(function (m) {
-        return m && m.role === 'user';
-      }).length > 1;
-
-    if (/\b(suicide|kill myself|end my life|magpakamatay|ayoko na mabuhay|self-harm|hurt myself)\b/i.test(lower)) {
+    if (topic === 'crisis') {
       return {
         moodEmoji: '🫂',
         summary: isTaglish
@@ -126,12 +153,16 @@
       };
     }
 
-    if (/\b(love|crush|feelings|confess|partner|boyfriend|girlfriend|ex|relationship|breakup|mahal|jowa|relasyon|hiwalay|pag-ibig|ligaw)\b/.test(lower)) {
+    if (topic === 'love') {
       return {
         moodEmoji: '🫶',
         summary: isTaglish
-          ? 'Ramdam ko kung gaano kahirap kapag puso at peace of mind ang nakataya.'
-          : 'Relationships and unspoken feelings can pull your heart in two opposite directions.',
+          ? (isFollowUp
+              ? 'Mas malinaw na ngayon ang sitwasyon ninyo—mahalaga na maprotektahan din ang peace mo.'
+              : 'Ramdam ko kung gaano kahirap kapag puso at peace of mind ang nakataya.')
+          : (isFollowUp
+              ? 'With that extra context, protecting your clarity and emotional peace matters even more.'
+              : 'Relationships and unspoken feelings can pull your heart in two opposite directions.'),
         advice: isTaglish
           ? (persona === 'practical'
               ? 'Sa relasyon, mas nakakasakit ang hulaan kaysa sa malinaw na sagot. Mag-set ng kalmadong usapan o malinaw na boundary para alam mo kung saan ka lulugar.'
@@ -154,18 +185,22 @@
       };
     }
 
-    if (/\b(work|boss|job|resign|burnout|salary|career|trabaho|sahod|pagod|office)\b/.test(lower)) {
+    if (topic === 'work') {
       return {
         moodEmoji: '☕',
         summary: isTaglish
-          ? 'Nakakaubos talaga ang trabahong hindi na nagbibigay ng pahinga sa utak at katawan.'
-          : 'Workplace burnout builds quietly until even small tasks feel exhausting.',
+          ? (isFollowUp
+              ? 'Nakikita ko kung bakit nakaka-drain ang work setup mo ngayon.'
+              : 'Nakakaubos talaga ang trabahong hindi na nagbibigay ng pahinga sa utak at katawan.')
+          : (isFollowUp
+              ? 'That extra detail explains why your work situation feels so draining.'
+              : 'Workplace burnout builds quietly until even small tasks feel exhausting.'),
         advice: isTaglish
-          ? 'Huwag kang mag-desisyon habang nasa peak ng pagod kung pwede pang mag-pause. I-separate ang short-term burnout sa totoong dead-end environment—minsan pahinga ang kailangan, minsan exit plan.'
+          ? 'Huwag kang mag-desisyon habang nasa peak ng pagod kung pwede pang mag-pause. I-separate ang short-term burnout sa totoong dead-end environment—minsan pahinga ang kailangan, minsan calm exit plan.'
           : 'Try not to make irreversible career moves at peak exhaustion if you have room to breathe. Separate temporary overload from a toxic or dead-end environment—then build either boundaries or a calm exit plan.',
         actionSteps: isTaglish
           ? [
-              'Mag-lista ng 3 bagay na pinaka-nakaka-drain sa trabaho mo ngayon.',
+              'Mag-lista ng 2-3 bagay na pinaka-nakaka-drain sa trabaho mo ngayon.',
               'Subukang mag-leave o mag-off ng notifications kahit isang weekend para makapag-reset.',
               'Kung toxic na talaga, mag-update ng resume at mag-apply habang may current income pa.',
             ]
@@ -180,7 +215,7 @@
       };
     }
 
-    if (/\b(school|exam|grade|college|thesis|professor|study|aral|klase|pasado|bagsak)\b/.test(lower)) {
+    if (topic === 'school') {
       return {
         moodEmoji: '📚',
         summary: isTaglish
@@ -203,6 +238,58 @@
         followUpQuestion: isTaglish
           ? 'Aling subject o requirement ang pinaka-naka-stuck ka ngayon?'
           : 'Which specific assignment or expectation is weighing on you the most right now?',
+      };
+    }
+
+    if (topic === 'family') {
+      return {
+        moodEmoji: '🏠',
+        summary: isTaglish
+          ? 'Mahirap talaga kapag pamilya o malalapit na kaibigan ang pinagmumulan ng bigat.'
+          : 'Tension with family or close friends hurts differently because you cannot easily walk away from it.',
+        advice: isTaglish
+          ? 'Pwede mong mahalin at irespeto ang pamilya o kaibigan mo habang nagse-set pa rin ng healthy boundaries. Hindi selfish ang pagprotekta sa mental peace mo.'
+          : 'You can care deeply about family or friends while still holding calm, firm boundaries. Protecting your emotional bandwidth is not selfish—it is what keeps relationships sustainable.',
+        actionSteps: isTaglish
+          ? [
+              'Piliin ang kalmadong oras bago makipag-usap—iwasan kapag parehong galit.',
+              'Sabihin nang malinaw kung ano ang kaya mo at hindi mo kaya nang walang paninisi.',
+              'Maglaan ng sariling space o tahimik na oras para makapag-recharge.',
+            ]
+          : [
+              'Wait until emotions cool before having a difficult conversation.',
+              'State your boundary simply and calmly without over-explaining or arguing.',
+              'Protect small pockets of personal space to recharge.',
+            ],
+        followUpQuestion: isTaglish
+          ? 'Anong boundary ang pinakamahirap i-set sa kanila ngayon?'
+          : 'What boundary feels hardest to express to them right now?',
+      };
+    }
+
+    if (topic === 'anxiety') {
+      return {
+        moodEmoji: '🌊',
+        summary: isTaglish
+          ? 'Ramdam ko ang kaba at pagod ng isip mo—okay lang mag-slow down muna.'
+          : 'When your mind is racing, everything feels ten times heavier than it really is.',
+        advice: isTaglish
+          ? 'Hindi mo kailangang i-solve ang buong future mo ngayong araw. Ibalik muna ang focus mo sa katawan mo at sa susunod na 10 minutes—kapag kalmado na ang isip, mas malinaw na rin ang solusyon.'
+          : 'You do not have to solve your entire future tonight. Ground yourself in the present moment first—once your nervous system settles, the next step becomes much easier to see.',
+        actionSteps: isTaglish
+          ? [
+              'Gawin ang 4-4-4 breathing (inhale 4s, hold 4s, exhale 4s) nang tatlong beses.',
+              'Isulat ang tatlong iniisip mo at lagyan ng check kung alin lang ang totoong kontrolado mo ngayon.',
+              'Uminom ng tubig at magpahinga muna palayo sa screen kahit 15 minutes.',
+            ]
+          : [
+              'Take three slow breaths (4 seconds in, 4 hold, 4 out) to lower the tension.',
+              'Write down your worries and circle only the single piece you can act on today.',
+              'Step away from screens for 15 minutes and give your brain a real pause.',
+            ],
+        followUpQuestion: isTaglish
+          ? 'Anong isang iniisip ang paulit-ulit na umiikot sa utak mo ngayon?'
+          : 'What is the one thought looping the loudest in your mind right now?',
       };
     }
 

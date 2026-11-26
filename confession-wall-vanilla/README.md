@@ -4,14 +4,11 @@ A zero-dependency, zero-build **Confession Wall** built strictly with **HTML5, C
 
 ## Features
 
-- **Open to Everyone (No Admin Gate)**: Anyone can open `index.html`, read confessions, react with emojis, and post immediately onto the wall.
-- **Anonymous Posting & Categories**: Tag posts with `#Confession`, `#Secret`, `#Love`, `#Work`, `#School`, `#Funny`, `#Vent`, or `#Regret`, and delete your own browser-created posts anytime.
-- **Payo AI — Private Multi-Turn Advice (`#advice`) & Card Advice Drawer**: Say anything freely (up to 3,000 characters in English, Tagalog, or Taglish), choose an advisor persona (*Warm & Empathetic*, *Taglish Bestie*, *Practical Coach*, *Calm Mentor*), receive structured reflection + action steps + follow-up questions, or click **💡 Get AI Advice** on any wall post.
-- **Built-in Safety & AI Companion (`js/ai.js`)**:
-  - Automatically guards against personal contact info (emails/phones), spam links, and harmful threats (preserving your draft so you can revise), with zero hidden approval queues.
-  - Generates context-aware emoji + empathetic/witty reactions instantly.
-  - **Optional AI Proxy Mode**: In **Settings**, you can optionally point to a CORS-enabled backend proxy (e.g. `http://localhost:3000`) to use live `nvidia/nemotron-3-ultra-550b-a55b` endpoints without exposing API keys in static browser code.
-- **Search, Filter, Sort & Discovery**: Keyword search, category filter chips, `Newest` / `Top` sorting, `Load More` pagination, URL-hash permalinks (`#confession=<id>`), `Copy Link`, **Surprise Me**, and local JSON backup export inside **Settings**.
+- **Open to Everyone (No Admin Gate)**: Anyone can open `index.html`, read confessions, react with emojis, reply anonymously, and post immediately onto the wall.
+- **Anonymous Posting, Moods & Editing**: Tag posts with categories (`#Confession`, `#Secret`, `#Love`, `#Work`, `#School`, `#Funny`, `#Vent`, `#Regret`) and optional mood badges (`🌙 Late Night`, `💔 Heartache`, `😤 Venting`, `🤫 Deep Secret`, `🌟 Hopeful`), plus edit or delete your own browser-created posts anytime.
+- **Anonymous Human Replies & Bookmarks**: Leave anonymous replies under any confession (`💬 Replies`) and bookmark favorite posts (`🔖 Saved`) to revisit later.
+- **Payo AI — Context-Aware Multi-Turn Advice (`#advice`) & Card Advice Drawer**: Say anything freely (up to 3,000 characters in English, Tagalog, or Taglish), choose an advisor persona (*Warm & Empathetic*, *Taglish Bestie*, *Practical Coach*, *Calm Mentor*), and get structured reflection + action steps + follow-up questions that retain topic context across turns (*Love*, *Work*, *School*, *Family*, *Anxiety*, *Crisis Support*).
+- **UX Polish & Portability**: Draft auto-save, `Ctrl/Cmd + Enter` shortcuts, Light/Dark theme toggle (`🌙` / `☀️`), `Escape` & backdrop modal dismissal, keyword search, `Newest` / `Top` sort, **Surprise Me**, and `Export JSON` / `Import JSON` backup inside **Settings**.
 
 ## Quick Start
 
@@ -31,10 +28,10 @@ Then open [http://localhost:8080/index.html](http://localhost:8080/index.html).
 confession-wall-vanilla/
 ├── index.html          # Main wall, AI Advice (#advice), permalink view & settings modal
 ├── css/
-│   └── styles.css      # Responsive dark glassmorphic styling
+│   └── styles.css      # Responsive dark & light glassmorphic styling
 ├── js/
-│   ├── store.js        # localStorage persistence, own-post delete, rate limiter & backup
-│   ├── ai.js           # Built-in safety/reaction/Payo AI engine + optional proxy adapter
+│   ├── store.js        # localStorage persistence, replies, bookmarks, drafts, theme & backup
+│   ├── ai.js           # Context-aware Payo AI, safety & reaction engine + optional proxy
 │   └── app.js          # Main wall & AI Advice DOM controller (XSS-safe textContent rendering)
 ├── .gitignore
 └── README.md

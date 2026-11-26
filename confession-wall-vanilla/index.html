@@ -6,7 +6,7 @@
   <title>Confession Wall — Open, Anonymous &amp; AI Advice</title>
   <meta
     name="description"
-    content="Open confession wall for everyone: share anonymous confessions, react with emojis, and get free AI advice in pure HTML, CSS, and Vanilla JS."
+    content="Open confession wall for everyone: share anonymous confessions, reply, bookmark, react with emojis, and get Payo AI advice in pure HTML, CSS, and Vanilla JS."
   />
   <link rel="stylesheet" href="css/styles.css" />
   <script defer src="js/store.js"></script>
@@ -32,6 +32,9 @@
         <button type="button" class="btn btn-ghost btn-sm" id="surpriseBtn" title="Read a random confession">
           <span aria-hidden="true">🔀</span>
           <span class="hide-sm">Surprise Me</span>
+        </button>
+        <button type="button" class="btn btn-ghost btn-sm" id="themeToggleBtn" title="Toggle light/dark theme" aria-label="Toggle theme">
+          🌙
         </button>
         <button type="button" class="btn btn-ghost btn-sm" id="settingsBtn" title="AI &amp; Data Settings">
           <span aria-hidden="true">⚙️</span>
@@ -99,7 +102,7 @@
           class="textarea"
           rows="4"
           maxlength="3000"
-          placeholder="Sabihin mo kahit ano... (e.g., problema, thoughts, kailangan ng payo, o mag-vent lang)"
+          placeholder="Sabihin mo kahit ano... (Ctrl+Enter to send)"
           aria-label="Message for AI advice"
         ></textarea>
         <div class="form-footer">
@@ -124,6 +127,7 @@
 
         <form id="confessionForm" class="stack-sm mt-3" novalidate>
           <div id="formCategoryChips" class="chip-row" role="radiogroup" aria-label="Confession category"></div>
+          <div id="formMoodChips" class="chip-row" role="radiogroup" aria-label="Optional mood badge"></div>
 
           <div>
             <textarea
@@ -131,7 +135,7 @@
               class="textarea"
               rows="4"
               maxlength="1050"
-              placeholder="What's on your mind that you can't tell anyone else..."
+              placeholder="What's on your mind that you can't tell anyone else... (Ctrl+Enter to post)"
               aria-label="Confession text"
             ></textarea>
             <p id="inputError" class="field-error hidden"></p>
@@ -157,6 +161,9 @@
           </div>
 
           <div class="toolbar-actions">
+            <button type="button" id="savedFilterBtn" class="chip" aria-pressed="false">
+              🔖 Saved (0)
+            </button>
             <div class="segmented" role="group" aria-label="Sort confessions">
               <button type="button" class="seg-btn active" data-sort="newest">Newest</button>
               <button type="button" class="seg-btn" data-sort="top">🔥 Top</button>
@@ -234,6 +241,10 @@
         <p class="field-label">Local Backup &amp; Demo Data</p>
         <div class="toolbar-actions">
           <button type="button" id="exportJsonBtn" class="btn btn-secondary btn-sm">⬇ Export JSON</button>
+          <label class="btn btn-secondary btn-sm file-label">
+            ⬆ Import JSON
+            <input type="file" id="importJsonInput" accept="application/json" class="sr-only" />
+          </label>
           <button type="button" id="resetDemoBtn" class="btn btn-ghost btn-sm">↺ Reset Demo Wall</button>
         </div>
       </div>
