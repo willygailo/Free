@@ -8,6 +8,7 @@
     settings: 'cw_vanilla_settings_v1',
     adminSession: 'cw_vanilla_admin_session_v1',
     adminPassHash: 'cw_vanilla_admin_pass_v1',
+    adviceHistory: 'cw_vanilla_advice_v1',
   };
 
   var CATEGORIES = [
@@ -432,6 +433,19 @@
     return getStorage().getItem(STORAGE_KEYS.adminSession) === 'active';
   }
 
+  function getAdviceHistory() {
+    var list = readJson(STORAGE_KEYS.adviceHistory, []);
+    return Array.isArray(list) ? list : [];
+  }
+
+  function saveAdviceHistory(messages) {
+    writeJson(STORAGE_KEYS.adviceHistory, Array.isArray(messages) ? messages : []);
+  }
+
+  function clearAdviceHistory() {
+    getStorage().removeItem(STORAGE_KEYS.adviceHistory);
+  }
+
   function setAdminSignedIn(active) {
     if (active) {
       getStorage().setItem(STORAGE_KEYS.adminSession, 'active');
@@ -477,6 +491,9 @@
     setAdminPasscode: setAdminPasscode,
     isAdminSignedIn: isAdminSignedIn,
     setAdminSignedIn: setAdminSignedIn,
+    getAdviceHistory: getAdviceHistory,
+    saveAdviceHistory: saveAdviceHistory,
+    clearAdviceHistory: clearAdviceHistory,
     formatRelativeTime: formatRelativeTime,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

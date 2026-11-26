@@ -6,6 +6,7 @@ A zero-dependency, zero-build **Confession Wall** built strictly with **HTML5, C
 
 - **Zero Dependencies & Zero Build Step**: No Node.js, npm, React, Next.js, Tailwind, or bundlers required.
 - **Anonymous Posting & Categories**: Tag posts with `#Confession`, `#Secret`, `#Love`, `#Work`, `#School`, `#Funny`, `#Vent`, or `#Regret`.
+- **Payo AI — Private Multi-Turn Advice (`#advice`) & Card Advice Drawer**: Say anything freely (up to 3,000 characters in English, Tagalog, or Taglish), choose an advisor persona (*Warm & Empathetic*, *Taglish Bestie*, *Practical Coach*, *Calm Mentor*), receive structured reflection + action steps + follow-up questions (stored privately in `localStorage`), or click **💡 Get AI Advice** on any wall post.
 - **Built-in Moderation & AI Companion (`js/ai.js`)**:
   - Automatically blocks emails, phone numbers, spam/phishing links, and harmful language (preserving your draft so you can revise).
   - Routes borderline posts to the Admin `Flagged` queue.

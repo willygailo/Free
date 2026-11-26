@@ -805,11 +805,168 @@ code {
   color: var(--text-muted);
 }
 
+/* AI Advice (Payo) & Drawers */
+.persona-grid,
+.prompt-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.persona-card,
+.prompt-chip {
+  text-align: left;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(63, 63, 70, 0.8);
+  background: rgba(9, 9, 11, 0.65);
+  color: var(--text-muted);
+  padding: 0.65rem 0.8rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.persona-card:hover,
+.prompt-chip:hover {
+  border-color: var(--accent-border);
+  color: var(--text-main);
+}
+
+.persona-card.active {
+  border-color: rgba(139, 92, 246, 0.7);
+  background: rgba(124, 58, 237, 0.16);
+  color: var(--text-main);
+}
+
+.persona-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.persona-desc {
+  margin-top: 0.15rem;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+.prompt-chip {
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: #d4d4d8;
+}
+
+.chat-row-user {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.chat-bubble-user {
+  max-width: 88%;
+  border-radius: 1rem 1rem 0.25rem 1rem;
+  border: 1px solid var(--accent-border);
+  background: rgba(124, 58, 237, 0.22);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text-main);
+}
+
+.advice-card {
+  padding: 1.15rem;
+  border-color: rgba(16, 185, 129, 0.28);
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.advice-summary {
+  margin: 0;
+  font-size: 0.82rem;
+  font-style: italic;
+  color: #d4d4d8;
+}
+
+.advice-text {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  color: var(--text-main);
+}
+
+.advice-steps-box {
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(63, 63, 70, 0.8);
+  background: rgba(9, 9, 11, 0.65);
+  padding: 0.75rem 0.9rem;
+}
+
+.advice-steps-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--success);
+}
+
+.advice-steps-list {
+  margin: 0;
+  padding-left: 1.15rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: #e4e4e7;
+}
+
+.advice-followup {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #c4b5fd;
+}
+
+.advice-drawer {
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  background: rgba(6, 78, 59, 0.16);
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.card-bottom-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.advice-pill-btn {
+  border-radius: var(--radius-full);
+  border: 1px solid var(--accent-border);
+  background: rgba(46, 16, 101, 0.3);
+  color: #ddd6fe;
+  padding: 0.28rem 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.advice-pill-btn:hover {
+  background: rgba(124, 58, 237, 0.32);
+}
+
 @media (max-width: 600px) {
   .hide-sm {
     display: none;
   }
   .admin-search {
     max-width: 100%;
+  }
+  .persona-grid,
+  .prompt-grid {
+    grid-template-columns: 1fr;
   }
 }

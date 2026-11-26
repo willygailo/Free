@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Confession Wall — Anonymous &amp; AI-Moderated</title>
+  <title>Confession Wall — Anonymous &amp; AI Advice</title>
   <meta
     name="description"
-    content="Share anonymous confessions on a zero-dependency wall with instant AI-style moderation, reactions, search, and admin review."
+    content="Share anonymous confessions or talk freely with Payo AI for empathetic, practical advice in pure HTML, CSS, and Vanilla JS."
   />
   <link rel="stylesheet" href="css/styles.css" />
   <script defer src="js/store.js"></script>
@@ -25,6 +25,10 @@
       </a>
 
       <nav class="nav-actions" aria-label="Primary navigation">
+        <a href="#advice" class="btn btn-ghost btn-sm" id="navAdviceBtn">
+          <span aria-hidden="true">💬</span>
+          <span>AI Advice</span>
+        </a>
         <button type="button" class="btn btn-ghost btn-sm" id="surpriseBtn" title="Read a random confession">
           <span aria-hidden="true">🔀</span>
           <span class="hide-sm">Surprise Me</span>
@@ -42,7 +46,7 @@
   </header>
 
   <main class="container main-content">
-    <!-- Permalink View (shown when URL hash is #confession=<id>) -->
+    <!-- Permalink View (URL hash #confession=<id>) -->
     <section id="permalinkSection" class="stack hidden" aria-live="polite">
       <div class="toolbar-row">
         <a href="index.html" id="backToWallBtn" class="back-link">← Back to Confession Wall</a>
@@ -58,19 +62,71 @@
       <div id="permalinkContainer"></div>
     </section>
 
+    <!-- Private AI Advice View (URL hash #advice) -->
+    <section id="adviceSection" class="stack-lg hidden" aria-live="polite">
+      <div class="toolbar-row">
+        <a href="index.html" id="adviceBackBtn" class="back-link">← Back to Confession Wall</a>
+        <div class="toolbar-actions">
+          <button type="button" class="btn btn-secondary btn-sm hidden" id="shareAdviceToWallBtn">
+            🔗 Share Last Thought to Wall
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm hidden" id="clearAdviceBtn">
+            ↺ New Session
+          </button>
+        </div>
+      </div>
+
+      <div class="glass-card form-card stack">
+        <div class="card-header-row">
+          <div>
+            <h1 class="section-heading">💬 Payo AI — Say Anything, Get Advice</h1>
+            <p class="muted-sub">
+              Sabihin mo lahat ng gusto mong sabihin (English, Tagalog, o Taglish). Private sa browser mo at si AI ang bahalang magpayo.
+            </p>
+          </div>
+          <span class="pill-badge hide-sm">🔒 Private Session</span>
+        </div>
+
+        <div id="personaGrid" class="persona-grid" role="radiogroup" aria-label="AI Advisor Persona"></div>
+      </div>
+
+      <div id="adviceStarterBox" class="glass-card form-card stack-sm">
+        <p class="field-label">✨ Need a starting point? Click one or write freely below:</p>
+        <div id="adviceStarters" class="prompt-grid"></div>
+      </div>
+
+      <div id="adviceThread" class="stack"></div>
+
+      <form id="adviceForm" class="glass-card form-card stack-sm" novalidate>
+        <textarea
+          id="adviceInput"
+          class="textarea"
+          rows="4"
+          maxlength="3000"
+          placeholder="Sabihin mo kahit ano... (e.g., problema, thoughts, kailangan ng payo, o mag-vent lang)"
+          aria-label="Message for AI advice"
+        ></textarea>
+        <div class="form-footer">
+          <span id="adviceCharCounter" class="char-counter">0 / 3000</span>
+          <button type="submit" id="adviceSubmitBtn" class="btn btn-primary" disabled>
+            ✉️ Ask AI for Advice
+          </button>
+        </div>
+      </form>
+    </section>
+
     <!-- Main Wall View -->
     <div id="wallSection" class="stack-lg">
-      <!-- Submit Form -->
       <section class="glass-card form-card" aria-labelledby="formHeading">
         <div class="card-header-row">
           <div>
             <h1 id="formHeading" class="section-heading">Confess something anonymously</h1>
             <p class="muted-sub">No accounts, no names. Moderated &amp; answered in real time.</p>
           </div>
-          <span class="pill-badge hide-sm">🔒 Local &amp; Anonymous</span>
+          <a href="#advice" class="pill-badge">💬 Need private AI advice?</a>
         </div>
 
-        <form id="confessionForm" class="stack-sm" novalidate>
+        <form id="confessionForm" class="stack-sm mt-3" novalidate>
           <div id="formCategoryChips" class="chip-row" role="radiogroup" aria-label="Confession category"></div>
 
           <div>
@@ -96,7 +152,6 @@
         <div id="formFeedback" class="alert hidden" role="status"></div>
       </section>
 
-      <!-- Feed Controls & List -->
       <section class="stack" aria-labelledby="feedHeading">
         <div class="toolbar-row">
           <div class="toolbar-title-group">
@@ -148,6 +203,7 @@
       <p>Confessions are anonymous. Pure HTML, CSS &amp; Vanilla JavaScript.</p>
       <div class="footer-links">
         <a href="index.html">Wall</a>
+        <a href="#advice">AI Advice</a>
         <a href="admin.html">Moderation</a>
       </div>
     </div>
@@ -199,7 +255,7 @@
           placeholder="Leave blank to use built-in browser AI engine"
         />
         <p class="muted-sub">
-          When set, posts call <code>&lt;url&gt;/api/ai/moderate</code> and <code>&lt;url&gt;/api/ai/react</code> (with automatic fallback if offline). Never put secret API keys into static JS files.
+          When set, calls <code>&lt;url&gt;/api/ai/moderate</code>, <code>/api/ai/react</code>, and <code>/api/ai/advice</code> (with automatic fallback if offline). Never put secret API keys into static JS files.
         </p>
         <div class="modal-actions">
           <button type="button" class="btn btn-ghost btn-sm" id="resetSettingsBtn">Use Built-in AI</button>

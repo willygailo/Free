@@ -5,6 +5,36 @@
   var AI = window.ConfessionAI;
 
   var PAGE_SIZE = 10;
+  var PERSONAS = [
+    {
+      value: 'empathetic',
+      label: '🫂 Warm & Empathetic',
+      desc: 'Gentle listener first, soft guidance',
+    },
+    {
+      value: 'taglish_bestie',
+      label: '🫶 Taglish Bestie',
+      desc: 'Kaibigan vibes, natural Tagalog/English',
+    },
+    {
+      value: 'practical',
+      label: '💡 Practical Coach',
+      desc: 'Clear perspective + concrete action steps',
+    },
+    {
+      value: 'mentor',
+      label: '🌱 Calm Mentor',
+      desc: 'Big-picture wisdom & steady clarity',
+    },
+  ];
+
+  var ADVICE_STARTERS = [
+    'Pagod na ako sa work at hindi ko alam kung magre-resign na ba ako o magpapahinga lang muna.',
+    'I have feelings for a close friend and I do not know whether to confess or protect our friendship.',
+    'Nahihirapan akong mag-focus sa school lately dahil sa family pressure.',
+    'I just need to vent about something I cannot tell anyone in real life.',
+  ];
+
   var state = {
     selectedCategory: 'Confession',
     filterCategory: 'All',
@@ -12,6 +42,9 @@
     searchQuery: '',
     visibleLimit: PAGE_SIZE,
     submitting: false,
+    advicePersona: 'empathetic',
+    adviceLoading: false,
+    adviceMessages: [],
   };
 
   var els = {};
@@ -22,6 +55,19 @@
     els.permalinkCopyBtn = document.getElementById('permalinkCopyBtn');
     els.permalinkRandomBtn = document.getElementById('permalinkRandomBtn');
     els.backToWallBtn = document.getElementById('backToWallBtn');
+    els.adviceSection = document.getElementById('adviceSection');
+    els.adviceBackBtn = document.getElementById('adviceBackBtn');
+    els.navAdviceBtn = document.getElementById('navAdviceBtn');
+    els.personaGrid = document.getElementById('personaGrid');
+    els.adviceStarterBox = document.getElementById('adviceStarterBox');
+    els.adviceStarters = document.getElementById('adviceStarters');
+    els.adviceThread = document.getElementById('adviceThread');
+    els.adviceForm = document.getElementById('adviceForm');
+    els.adviceInput = document.getElementById('adviceInput');
+    els.adviceCharCounter = document.getElementById('adviceCharCounter');
+    els.adviceSubmitBtn = document.getElementById('adviceSubmitBtn');
+    els.clearAdviceBtn = document.getElementById('clearAdviceBtn');
+    els.shareAdviceToWallBtn = document.getElementById('shareAdviceToWallBtn');
     els.wallSection = document.getElementById('wallSection');
     els.formCategoryChips = document.getElementById('formCategoryChips');
     els.filterCategoryChips = document.getElementById('filterCategoryChips');
@@ -104,6 +150,68 @@
     });
   }
 
+  function renderAdviceResultInto(container, adviceData, showContinueLink, originalText) {
+    container.textContent = '';
+
+    var headerRow = document.createElement('div');
+    headerRow.className = 'card-header-row';
+    var titleSpan = document.createElement('span');
+    titleSpan.className = 'ai-label';
+    titleSpan.textContent = (adviceData.moodEmoji || '🫂') + ' Payo AI Advice';
+    headerRow.appendChild(titleSpan);
+
+    if (showContinueLink) {
+      var contBtn = document.createElement('button');
+      contBtn.type = 'button';
+      contBtn.className = 'icon-btn';
+      contBtn.textContent = 'Continue in Private AI Chat →';
+      contBtn.addEventListener('click', function () {
+        els.adviceInput.value = originalText || '';
+        updateAdviceValidation();
+        window.location.hash = 'advice';
+      });
+      headerRow.appendChild(contBtn);
+    }
+    container.appendChild(headerRow);
+
+    if (adviceData.summary) {
+      var sumP = document.createElement('p');
+      sumP.className = 'advice-summary';
+      sumP.textContent = adviceData.summary;
+      container.appendChild(sumP);
+    }
+
+    var adviceP = document.createElement('p');
+    adviceP.className = 'advice-text';
+    adviceP.textContent = adviceData.advice;
+    container.appendChild(adviceP);
+
+    if (Array.isArray(adviceData.actionSteps) && adviceData.actionSteps.length > 0) {
+      var stepsBox = document.createElement('div');
+      stepsBox.className = 'advice-steps-box';
+      var stepsTitle = document.createElement('p');
+      stepsTitle.className = 'advice-steps-title';
+      stepsTitle.textContent = 'Suggested Next Steps';
+      var ol = document.createElement('ol');
+      ol.className = 'advice-steps-list';
+      adviceData.actionSteps.forEach(function (step) {
+        var li = document.createElement('li');
+        li.textContent = step;
+        ol.appendChild(li);
+      });
+      stepsBox.appendChild(stepsTitle);
+      stepsBox.appendChild(ol);
+      container.appendChild(stepsBox);
+    }
+
+    if (adviceData.followUpQuestion) {
+      var fq = document.createElement('p');
+      fq.className = 'advice-followup';
+      fq.textContent = '💬 ' + adviceData.followUpQuestion;
+      container.appendChild(fq);
+    }
+  }
+
   function buildConfessionCard(confession, options) {
     var opts = options || {};
     var reactedMap = Store.getReactedMap();
@@ -114,7 +222,6 @@
     var article = document.createElement('article');
     article.className = 'glass-card confession-card';
 
-    // Top metadata row
     var meta = document.createElement('div');
     meta.className = 'card-meta';
 
@@ -191,13 +298,11 @@
     meta.appendChild(rightGroup);
     article.appendChild(meta);
 
-    // Content (strictly via textContent to prevent XSS)
     var body = document.createElement('p');
     body.className = 'confession-body';
     body.textContent = confession.content;
     article.appendChild(body);
 
-    // AI Bubble
     if (confession.ai_emoji || confession.ai_comment) {
       var bubble = document.createElement('div');
       bubble.className = 'ai-bubble';
@@ -224,7 +329,9 @@
       article.appendChild(bubble);
     }
 
-    // Reactions
+    var bottomRow = document.createElement('div');
+    bottomRow.className = 'card-bottom-row';
+
     var reactionRow = document.createElement('div');
     reactionRow.className = 'reaction-row';
 
@@ -253,7 +360,39 @@
       reactionRow.appendChild(btn);
     });
 
-    article.appendChild(reactionRow);
+    var adviceDrawer = document.createElement('div');
+    adviceDrawer.className = 'advice-drawer hidden';
+    var adviceLoaded = false;
+
+    var adviceBtn = document.createElement('button');
+    adviceBtn.type = 'button';
+    adviceBtn.className = 'advice-pill-btn';
+    adviceBtn.textContent = '💡 Get AI Advice';
+    adviceBtn.addEventListener('click', async function () {
+      var isOpen = !adviceDrawer.classList.contains('hidden');
+      if (isOpen && adviceLoaded) {
+        adviceDrawer.classList.add('hidden');
+        adviceBtn.textContent = '💡 Get AI Advice';
+        return;
+      }
+
+      adviceDrawer.classList.remove('hidden');
+      adviceBtn.textContent = '💡 Hide AI Advice';
+      if (adviceLoaded) return;
+
+      adviceDrawer.textContent = '⏳ Thinking of helpful advice...';
+      var result = await AI.advise(
+        [{ role: 'user', content: confession.content }],
+        'empathetic'
+      );
+      adviceLoaded = true;
+      renderAdviceResultInto(adviceDrawer, result, true, confession.content);
+    });
+
+    bottomRow.appendChild(reactionRow);
+    bottomRow.appendChild(adviceBtn);
+    article.appendChild(bottomRow);
+    article.appendChild(adviceDrawer);
     return article;
   }
 
@@ -312,19 +451,152 @@
     );
   }
 
+  function renderAdviceView() {
+    els.personaGrid.textContent = '';
+    PERSONAS.forEach(function (p) {
+      var card = document.createElement('button');
+      card.type = 'button';
+      card.className =
+        'persona-card' + (state.advicePersona === p.value ? ' active' : '');
+      var title = document.createElement('div');
+      title.className = 'persona-title';
+      title.textContent = p.label;
+      var desc = document.createElement('div');
+      desc.className = 'persona-desc';
+      desc.textContent = p.desc;
+      card.appendChild(title);
+      card.appendChild(desc);
+      card.addEventListener('click', function () {
+        state.advicePersona = p.value;
+        renderAdviceView();
+      });
+      els.personaGrid.appendChild(card);
+    });
+
+    els.adviceStarters.textContent = '';
+    ADVICE_STARTERS.forEach(function (prompt) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'prompt-chip';
+      btn.textContent = '“' + prompt + '”';
+      btn.addEventListener('click', function () {
+        els.adviceInput.value = prompt;
+        updateAdviceValidation();
+        els.adviceInput.focus();
+      });
+      els.adviceStarters.appendChild(btn);
+    });
+
+    var hasMessages = state.adviceMessages.length > 0;
+    els.adviceStarterBox.classList.toggle('hidden', hasMessages);
+    els.clearAdviceBtn.classList.toggle('hidden', !hasMessages);
+    els.shareAdviceToWallBtn.classList.toggle(
+      'hidden',
+      !state.adviceMessages.some(function (m) {
+        return m.role === 'user';
+      })
+    );
+
+    els.adviceThread.textContent = '';
+    state.adviceMessages.forEach(function (msg) {
+      if (msg.role === 'user') {
+        var row = document.createElement('div');
+        row.className = 'chat-row-user';
+        var bubble = document.createElement('div');
+        bubble.className = 'chat-bubble-user';
+        bubble.textContent = msg.content;
+        row.appendChild(bubble);
+        els.adviceThread.appendChild(row);
+      } else {
+        var card = document.createElement('div');
+        card.className = 'glass-card advice-card';
+        if (msg.adviceData) {
+          renderAdviceResultInto(card, msg.adviceData, false);
+        } else {
+          var p = document.createElement('p');
+          p.className = 'advice-text';
+          p.textContent = msg.content;
+          card.appendChild(p);
+        }
+        els.adviceThread.appendChild(card);
+      }
+    });
+
+    if (state.adviceLoading) {
+      var thinking = document.createElement('div');
+      thinking.className = 'glass-card form-card muted-sub';
+      thinking.textContent = '✨ Payo AI is reading carefully and preparing advice...';
+      els.adviceThread.appendChild(thinking);
+    }
+  }
+
+  function updateAdviceValidation() {
+    var raw = els.adviceInput.value;
+    var len = raw.length;
+    els.adviceCharCounter.textContent = len + ' / 3000';
+    els.adviceSubmitBtn.disabled =
+      state.adviceLoading || raw.trim().length === 0 || len > 3000;
+  }
+
+  async function handleAdviceSubmit(e) {
+    e.preventDefault();
+    if (state.adviceLoading) return;
+    var text = els.adviceInput.value.trim();
+    if (!text || text.length > 3000) return;
+
+    state.adviceMessages.push({
+      role: 'user',
+      content: text,
+      createdAt: new Date().toISOString(),
+    });
+    if (state.adviceMessages.length > 20) {
+      state.adviceMessages = state.adviceMessages.slice(-20);
+    }
+    Store.saveAdviceHistory(state.adviceMessages);
+    els.adviceInput.value = '';
+    state.adviceLoading = true;
+    updateAdviceValidation();
+    renderAdviceView();
+
+    try {
+      var adviceData = await AI.advise(state.adviceMessages, state.advicePersona);
+      state.adviceMessages.push({
+        role: 'assistant',
+        content: [adviceData.summary, adviceData.advice, adviceData.followUpQuestion]
+          .filter(Boolean)
+          .join('\n\n'),
+        createdAt: new Date().toISOString(),
+        adviceData: adviceData,
+      });
+      Store.saveAdviceHistory(state.adviceMessages);
+    } finally {
+      state.adviceLoading = false;
+      updateAdviceValidation();
+      renderAdviceView();
+    }
+  }
+
   function getHashConfessionId() {
     var match = window.location.hash.match(/^#confession=([a-zA-Z0-9-]+)$/);
     return match ? match[1] : null;
   }
 
   function renderCurrentRoute() {
+    var hash = window.location.hash;
     var id = getHashConfessionId();
-    if (id) {
-      els.wallSection.classList.add('hidden');
+
+    els.wallSection.classList.add('hidden');
+    els.permalinkSection.classList.add('hidden');
+    els.adviceSection.classList.add('hidden');
+
+    if (hash === '#advice') {
+      els.adviceSection.classList.remove('hidden');
+      renderAdviceView();
+      updateAdviceValidation();
+    } else if (id) {
       els.permalinkSection.classList.remove('hidden');
       renderPermalink(id);
     } else {
-      els.permalinkSection.classList.add('hidden');
       els.wallSection.classList.remove('hidden');
       renderWall();
     }
@@ -410,7 +682,6 @@
       });
 
       if (status === 'rejected') {
-        // Keep draft text so user can edit and retry
         showFormFeedback(
           'error',
           moderation.reason || 'Your confession was declined by moderation.'
@@ -466,6 +737,48 @@
 
     els.confessionForm.addEventListener('submit', handleConfessionSubmit);
 
+    els.adviceInput.addEventListener('input', updateAdviceValidation);
+    els.adviceForm.addEventListener('submit', handleAdviceSubmit);
+
+    els.clearAdviceBtn.addEventListener('click', function () {
+      state.adviceMessages = [];
+      Store.clearAdviceHistory();
+      renderAdviceView();
+      showToast('Started a fresh private advice session.');
+    });
+
+    els.shareAdviceToWallBtn.addEventListener('click', async function () {
+      var lastUser = null;
+      for (var i = state.adviceMessages.length - 1; i >= 0; i -= 1) {
+        if (state.adviceMessages[i].role === 'user') {
+          lastUser = state.adviceMessages[i].content;
+          break;
+        }
+      }
+      if (!lastUser) return;
+      var snippet = lastUser.slice(0, 990);
+      var mod = await AI.moderate(snippet);
+      if (!mod.approved && !mod.flagged) {
+        showToast(mod.reason || 'Cannot share due to moderation guidelines.');
+        return;
+      }
+      var status = mod.flagged ? 'flagged' : 'approved';
+      var reaction = status === 'approved' ? await AI.react(snippet, 'Vent') : {};
+      Store.createConfession({
+        content: snippet,
+        category: 'Vent',
+        status: status,
+        ai_emoji: reaction.emoji || null,
+        ai_comment: reaction.comment || null,
+        moderation_reason: mod.reason || null,
+      });
+      showToast(
+        status === 'flagged'
+          ? 'Shared anonymously & queued for admin review.'
+          : 'Shared anonymously to the public Confession Wall!'
+      );
+    });
+
     var searchDebounce = null;
     els.searchInput.addEventListener('input', function () {
       var val = els.searchInput.value;
@@ -515,6 +828,12 @@
       renderCurrentRoute();
     });
 
+    els.adviceBackBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      window.location.hash = '';
+      renderCurrentRoute();
+    });
+
     els.permalinkCopyBtn.addEventListener('click', function () {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(window.location.href).then(function () {
@@ -523,7 +842,6 @@
       }
     });
 
-    // Report Modal
     els.closeReportModal.addEventListener('click', closeReportModal);
     els.cancelReportBtn.addEventListener('click', closeReportModal);
     els.reportForm.addEventListener('submit', function (e) {
@@ -544,7 +862,6 @@
       showToast('Confession flagged for admin review.');
     });
 
-    // Settings Modal
     els.settingsBtn.addEventListener('click', function () {
       els.aiProxyUrlInput.value = Store.getSettings().aiProxyUrl || '';
       els.settingsModal.classList.remove('hidden');
@@ -578,9 +895,11 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     cacheElements();
+    state.adviceMessages = Store.getAdviceHistory();
     updateModeBadge();
     renderCategoryChips();
     updateFormValidation();
+    updateAdviceValidation();
     bindEvents();
     renderCurrentRoute();
   });
