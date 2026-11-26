@@ -87,18 +87,13 @@
     els.refreshBtn = document.getElementById('refreshBtn');
     els.surpriseBtn = document.getElementById('surpriseBtn');
     els.settingsBtn = document.getElementById('settingsBtn');
-    els.reportModal = document.getElementById('reportModal');
-    els.reportForm = document.getElementById('reportForm');
-    els.reportConfessionId = document.getElementById('reportConfessionId');
-    els.reportReasonInput = document.getElementById('reportReasonInput');
-    els.reportError = document.getElementById('reportError');
-    els.closeReportModal = document.getElementById('closeReportModal');
-    els.cancelReportBtn = document.getElementById('cancelReportBtn');
     els.settingsModal = document.getElementById('settingsModal');
     els.settingsForm = document.getElementById('settingsForm');
     els.aiProxyUrlInput = document.getElementById('aiProxyUrlInput');
     els.closeSettingsModal = document.getElementById('closeSettingsModal');
     els.resetSettingsBtn = document.getElementById('resetSettingsBtn');
+    els.exportJsonBtn = document.getElementById('exportJsonBtn');
+    els.resetDemoBtn = document.getElementById('resetDemoBtn');
     els.toast = document.getElementById('toast');
   }
 
@@ -116,8 +111,8 @@
   function updateModeBadge() {
     var settings = Store.getSettings();
     els.modeBadge.textContent = settings.aiProxyUrl
-      ? '✨ AI Proxy • Local Storage'
-      : '✨ Built-in AI • Local Storage';
+      ? '✨ Open Wall • AI Proxy'
+      : '✨ Open Wall • Built-in AI';
   }
 
   function renderCategoryChips() {
@@ -275,15 +270,23 @@
     });
     rightGroup.appendChild(copyBtn);
 
-    var reportBtn = document.createElement('button');
-    reportBtn.type = 'button';
-    reportBtn.className = 'icon-btn';
-    reportBtn.title = 'Report confession';
-    reportBtn.textContent = '🚩';
-    reportBtn.addEventListener('click', function () {
-      openReportModal(confession.id);
-    });
-    rightGroup.appendChild(reportBtn);
+    if (Store.isMyPost(confession.id)) {
+      var delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'icon-btn';
+      delBtn.title = 'Delete my post';
+      delBtn.textContent = '🗑';
+      delBtn.addEventListener('click', function () {
+        if (Store.deleteMyPost(confession.id)) {
+          if (getHashConfessionId() === confession.id) {
+            window.location.hash = '';
+          }
+          renderCurrentRoute();
+          showToast('Your confession was removed.');
+        }
+      });
+      rightGroup.appendChild(delBtn);
+    }
 
     if (opts.showPermalink !== false) {
       var link = document.createElement('a');
@@ -440,7 +443,7 @@
       box.className = 'glass-card empty-state';
       var msg = document.createElement('p');
       msg.className = 'alert alert-error';
-      msg.textContent = 'This confession was not found or is awaiting moderation.';
+      msg.textContent = 'This confession was not found.';
       box.appendChild(msg);
       els.permalinkContainer.appendChild(box);
       return;
@@ -649,58 +652,37 @@
 
     var rate = Store.checkPostRateLimit();
     if (!rate.allowed) {
-      showFormFeedback('error', 'Rate limit reached (max 5 posts per 15 minutes). Please wait.');
+      showFormFeedback('error', 'Rate limit reached (max 10 posts per 15 minutes). Please wait.');
       return;
     }
 
     state.submitting = true;
-    els.submitBtn.textContent = '⏳ Moderating & Posting...';
+    els.submitBtn.textContent = '⏳ Posting...';
     updateFormValidation();
     els.formFeedback.classList.add('hidden');
 
     try {
-      var moderation = await AI.moderate(content);
-      var status = 'approved';
-      if (moderation.flagged) {
-        status = 'flagged';
-      } else if (!moderation.approved) {
-        status = 'rejected';
+      var safety = await AI.moderate(content);
+      if (!safety.approved) {
+        showFormFeedback(
+          'error',
+          safety.reason || 'Please avoid personal contact details, spam links, or harmful threats.'
+        );
+        return;
       }
 
-      var aiReaction =
-        status === 'approved'
-          ? await AI.react(content, state.selectedCategory)
-          : { emoji: null, comment: null };
+      var aiReaction = await AI.react(content, state.selectedCategory);
 
       Store.createConfession({
         content: content,
         category: state.selectedCategory,
-        status: status,
         ai_emoji: aiReaction.emoji,
         ai_comment: aiReaction.comment,
-        moderation_reason: moderation.reason || null,
       });
 
-      if (status === 'rejected') {
-        showFormFeedback(
-          'error',
-          moderation.reason || 'Your confession was declined by moderation.'
-        );
-      } else {
-        els.confessionInput.value = '';
-        if (status === 'flagged') {
-          showFormFeedback(
-            'warning',
-            moderation.reason || 'Flagged for human admin review.'
-          );
-        } else {
-          showFormFeedback(
-            'success',
-            'Confession posted anonymously to the wall!'
-          );
-          renderWall();
-        }
-      }
+      els.confessionInput.value = '';
+      showFormFeedback('success', 'Confession posted anonymously to the wall!');
+      renderWall();
     } finally {
       state.submitting = false;
       els.submitBtn.textContent = '✉️ Post Anonymously';
@@ -708,22 +690,10 @@
     }
   }
 
-  function openReportModal(id) {
-    els.reportConfessionId.value = id;
-    els.reportReasonInput.value = '';
-    els.reportError.classList.add('hidden');
-    els.reportModal.classList.remove('hidden');
-    els.reportReasonInput.focus();
-  }
-
-  function closeReportModal() {
-    els.reportModal.classList.add('hidden');
-  }
-
   function openRandomConfession() {
     var pick = Store.getRandom();
     if (!pick) {
-      showToast('No approved confessions available yet.');
+      showToast('No confessions available yet.');
       return;
     }
     window.location.hash = 'confession=' + pick.id;
@@ -757,26 +727,19 @@
       }
       if (!lastUser) return;
       var snippet = lastUser.slice(0, 990);
-      var mod = await AI.moderate(snippet);
-      if (!mod.approved && !mod.flagged) {
-        showToast(mod.reason || 'Cannot share due to moderation guidelines.');
+      var safety = await AI.moderate(snippet);
+      if (!safety.approved) {
+        showToast(safety.reason || 'Cannot share due to safety guidelines.');
         return;
       }
-      var status = mod.flagged ? 'flagged' : 'approved';
-      var reaction = status === 'approved' ? await AI.react(snippet, 'Vent') : {};
+      var reaction = await AI.react(snippet, 'Vent');
       Store.createConfession({
         content: snippet,
         category: 'Vent',
-        status: status,
         ai_emoji: reaction.emoji || null,
         ai_comment: reaction.comment || null,
-        moderation_reason: mod.reason || null,
       });
-      showToast(
-        status === 'flagged'
-          ? 'Shared anonymously & queued for admin review.'
-          : 'Shared anonymously to the public Confession Wall!'
-      );
+      showToast('Shared anonymously to the public Confession Wall!');
     });
 
     var searchDebounce = null;
@@ -842,26 +805,6 @@
       }
     });
 
-    els.closeReportModal.addEventListener('click', closeReportModal);
-    els.cancelReportBtn.addEventListener('click', closeReportModal);
-    els.reportForm.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var id = els.reportConfessionId.value;
-      var reason = els.reportReasonInput.value.trim();
-      if (reason.length < 5) {
-        els.reportError.textContent = 'Please provide at least 5 characters.';
-        els.reportError.classList.remove('hidden');
-        return;
-      }
-      Store.reportConfession(id, reason);
-      closeReportModal();
-      if (getHashConfessionId() === id) {
-        window.location.hash = '';
-      }
-      renderCurrentRoute();
-      showToast('Confession flagged for admin review.');
-    });
-
     els.settingsBtn.addEventListener('click', function () {
       els.aiProxyUrlInput.value = Store.getSettings().aiProxyUrl || '';
       els.settingsModal.classList.remove('hidden');
@@ -885,6 +828,24 @@
       updateModeBadge();
       els.settingsModal.classList.add('hidden');
       showToast('Settings saved.');
+    });
+
+    els.exportJsonBtn.addEventListener('click', function () {
+      var blob = new Blob([Store.exportJson()], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'confessions-backup.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Exported JSON backup.');
+    });
+
+    els.resetDemoBtn.addEventListener('click', function () {
+      Store.resetDemoData();
+      els.settingsModal.classList.add('hidden');
+      renderCurrentRoute();
+      showToast('Demo confessions restored.');
     });
 
     window.addEventListener('hashchange', renderCurrentRoute);

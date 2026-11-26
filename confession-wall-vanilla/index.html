@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Confession Wall — Anonymous &amp; AI Advice</title>
+  <title>Confession Wall — Open, Anonymous &amp; AI Advice</title>
   <meta
     name="description"
-    content="Share anonymous confessions or talk freely with Payo AI for empathetic, practical advice in pure HTML, CSS, and Vanilla JS."
+    content="Open confession wall for everyone: share anonymous confessions, react with emojis, and get free AI advice in pure HTML, CSS, and Vanilla JS."
   />
   <link rel="stylesheet" href="css/styles.css" />
   <script defer src="js/store.js"></script>
@@ -20,7 +20,7 @@
         <span class="brand-icon" aria-hidden="true">🔥</span>
         <span class="brand-text">
           <span class="brand-title">Confession Wall</span>
-          <span class="brand-subtitle">Anonymous • Vanilla HTML/CSS/JS</span>
+          <span class="brand-subtitle">Open to Everyone • Anonymous</span>
         </span>
       </a>
 
@@ -33,14 +33,10 @@
           <span aria-hidden="true">🔀</span>
           <span class="hide-sm">Surprise Me</span>
         </button>
-        <button type="button" class="btn btn-ghost btn-sm" id="settingsBtn" title="AI &amp; Storage Settings">
+        <button type="button" class="btn btn-ghost btn-sm" id="settingsBtn" title="AI &amp; Data Settings">
           <span aria-hidden="true">⚙️</span>
           <span class="hide-sm">Settings</span>
         </button>
-        <a href="admin.html" class="btn btn-ghost btn-sm">
-          <span aria-hidden="true">🛡️</span>
-          <span>Admin</span>
-        </a>
       </nav>
     </div>
   </header>
@@ -121,7 +117,7 @@
         <div class="card-header-row">
           <div>
             <h1 id="formHeading" class="section-heading">Confess something anonymously</h1>
-            <p class="muted-sub">No accounts, no names. Moderated &amp; answered in real time.</p>
+            <p class="muted-sub">Open to everyone — no login needed. Instant AI reaction &amp; advice.</p>
           </div>
           <a href="#advice" class="pill-badge">💬 Need private AI advice?</a>
         </div>
@@ -157,7 +153,7 @@
           <div class="toolbar-title-group">
             <h2 id="feedHeading" class="feed-heading">Latest Confessions</h2>
             <span id="totalBadge" class="count-pill">0</span>
-            <span id="modeBadge" class="pill-badge">✨ Built-in AI • Local Storage</span>
+            <span id="modeBadge" class="pill-badge">✨ Open Wall • Built-in AI</span>
           </div>
 
           <div class="toolbar-actions">
@@ -200,48 +196,19 @@
 
   <footer class="footer">
     <div class="container footer-inner">
-      <p>Confessions are anonymous. Pure HTML, CSS &amp; Vanilla JavaScript.</p>
+      <p>Confessions are anonymous and open to everyone. Pure HTML, CSS &amp; Vanilla JavaScript.</p>
       <div class="footer-links">
         <a href="index.html">Wall</a>
         <a href="#advice">AI Advice</a>
-        <a href="admin.html">Moderation</a>
       </div>
     </div>
   </footer>
 
-  <!-- Report Modal -->
-  <div id="reportModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="reportTitle">
-    <div class="glass-card modal-card">
-      <div class="modal-header">
-        <h3 id="reportTitle">Report Confession</h3>
-        <button type="button" class="icon-btn" id="closeReportModal" aria-label="Close modal">✕</button>
-      </div>
-      <p class="muted-sub">Flag this post for human moderation review in the Admin dashboard.</p>
-      <form id="reportForm" class="stack-sm">
-        <input type="hidden" id="reportConfessionId" />
-        <input
-          type="text"
-          id="reportReasonInput"
-          class="input"
-          minlength="5"
-          maxlength="300"
-          required
-          placeholder="Reason (e.g., doxxing, harassment, spam)..."
-        />
-        <p id="reportError" class="field-error hidden"></p>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-ghost btn-sm" id="cancelReportBtn">Cancel</button>
-          <button type="submit" class="btn btn-primary btn-sm">Submit Report</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Settings Modal -->
+  <!-- Settings & Data Modal -->
   <div id="settingsModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
-    <div class="glass-card modal-card">
+    <div class="glass-card modal-card stack">
       <div class="modal-header">
-        <h3 id="settingsTitle">AI &amp; Storage Settings</h3>
+        <h3 id="settingsTitle">AI &amp; Data Settings</h3>
         <button type="button" class="icon-btn" id="closeSettingsModal" aria-label="Close settings">✕</button>
       </div>
       <form id="settingsForm" class="stack-sm">
@@ -255,13 +222,21 @@
           placeholder="Leave blank to use built-in browser AI engine"
         />
         <p class="muted-sub">
-          When set, calls <code>&lt;url&gt;/api/ai/moderate</code>, <code>/api/ai/react</code>, and <code>/api/ai/advice</code> (with automatic fallback if offline). Never put secret API keys into static JS files.
+          When set, calls <code>&lt;url&gt;/api/ai/moderate</code>, <code>/api/ai/react</code>, and <code>/api/ai/advice</code> (with automatic fallback if offline).
         </p>
         <div class="modal-actions">
           <button type="button" class="btn btn-ghost btn-sm" id="resetSettingsBtn">Use Built-in AI</button>
           <button type="submit" class="btn btn-primary btn-sm">Save Settings</button>
         </div>
       </form>
+
+      <div class="stack-sm">
+        <p class="field-label">Local Backup &amp; Demo Data</p>
+        <div class="toolbar-actions">
+          <button type="button" id="exportJsonBtn" class="btn btn-secondary btn-sm">⬇ Export JSON</button>
+          <button type="button" id="resetDemoBtn" class="btn btn-ghost btn-sm">↺ Reset Demo Wall</button>
+        </div>
+      </div>
     </div>
   </div>
 

@@ -4,10 +4,9 @@
   var STORAGE_KEYS = {
     confessions: 'cw_vanilla_confessions_v1',
     reacted: 'cw_vanilla_reacted_v1',
+    myPosts: 'cw_vanilla_my_posts_v1',
     rateLimit: 'cw_vanilla_ratelimit_v1',
     settings: 'cw_vanilla_settings_v1',
-    adminSession: 'cw_vanilla_admin_session_v1',
-    adminPassHash: 'cw_vanilla_admin_pass_v1',
     adviceHistory: 'cw_vanilla_advice_v1',
   };
 
@@ -87,12 +86,9 @@
         content:
           'I still keep the handwritten note a stranger left on my car windshield three years ago when I was having the worst week of my life. It just said "You matter more than you know."',
         category: 'Secret',
-        status: 'approved',
         ai_emoji: '🫂',
         ai_comment:
           'Sometimes a tiny act of kindness becomes an anchor for years. Keeping that note is a quiet reminder of how much light can come from unexpected places.',
-        moderation_reason: null,
-        report_count: 0,
         created_at: new Date(now - 1000 * 60 * 42).toISOString(),
         reactions: { '❤️': 18, '😂': 0, '😢': 6, '😮': 4 },
       },
@@ -101,12 +97,9 @@
         content:
           'At work everyone thinks I am a productivity wizard, but half of my "deep focus blocks" are just me staring at a bug until my brain reboots.',
         category: 'Work',
-        status: 'approved',
         ai_emoji: '😅',
         ai_comment:
           'To be fair, tactical staring is an underrated debugging technique. If the bug eventually yields, the wizard title stands.',
-        moderation_reason: null,
-        report_count: 0,
         created_at: new Date(now - 1000 * 60 * 115).toISOString(),
         reactions: { '❤️': 7, '😂': 24, '😢': 1, '😮': 2 },
       },
@@ -115,12 +108,9 @@
         content:
           'I learned how to bake sourdough just so I would have an excuse to bring extra loaves to my neighbor without making things awkward.',
         category: 'Love',
-        status: 'approved',
         ai_emoji: '🫶',
         ai_comment:
           'Using artisanal bread as a stealth affection strategy is genuinely adorable. Wishing your loaves and your conversations both rise nicely.',
-        moderation_reason: null,
-        report_count: 0,
         created_at: new Date(now - 1000 * 60 * 240).toISOString(),
         reactions: { '❤️': 31, '😂': 9, '😢': 0, '😮': 5 },
       },
@@ -155,7 +145,7 @@
     var offset = Math.max(0, options.offset || 0);
 
     var filtered = loadAll().filter(function (c) {
-      return c.status === 'approved';
+      return !c.status || c.status === 'approved';
     });
 
     if (category) {
@@ -192,24 +182,23 @@
   }
 
   function getById(id) {
-    var list = loadAll();
     return (
-      list.find(function (c) {
-        return c.id === id && c.status === 'approved';
+      loadAll().find(function (c) {
+        return c.id === id && (!c.status || c.status === 'approved');
       }) || null
     );
   }
 
   function getRandom() {
-    var approved = loadAll().filter(function (c) {
-      return c.status === 'approved';
+    var list = loadAll().filter(function (c) {
+      return !c.status || c.status === 'approved';
     });
-    if (approved.length === 0) return null;
-    return approved[Math.floor(Math.random() * approved.length)];
+    if (list.length === 0) return null;
+    return list[Math.floor(Math.random() * list.length)];
   }
 
   function checkPostRateLimit(maxPosts, windowMs) {
-    var max = maxPosts || 5;
+    var max = maxPosts || 10;
     var win = windowMs || 15 * 60 * 1000;
     var now = Date.now();
     var timestamps = readJson(STORAGE_KEYS.rateLimit, []).filter(function (t) {
@@ -226,23 +215,49 @@
     return { allowed: true, remaining: max - timestamps.length };
   }
 
+  function getMyPostIds() {
+    var ids = readJson(STORAGE_KEYS.myPosts, []);
+    return Array.isArray(ids) ? ids : [];
+  }
+
+  function isMyPost(id) {
+    return getMyPostIds().indexOf(id) !== -1;
+  }
+
   function createConfession(input) {
     var list = loadAll();
     var record = {
       id: generateUuid(),
       content: input.content,
       category: CATEGORIES.indexOf(input.category) !== -1 ? input.category : 'Confession',
-      status: input.status || 'approved',
       ai_emoji: input.ai_emoji || null,
       ai_comment: input.ai_comment || null,
-      moderation_reason: input.moderation_reason || null,
-      report_count: 0,
       created_at: new Date().toISOString(),
       reactions: emptyReactions(),
     };
     list.unshift(record);
     saveAll(list);
+
+    var myIds = getMyPostIds();
+    myIds.unshift(record.id);
+    writeJson(STORAGE_KEYS.myPosts, myIds);
+
     return record;
+  }
+
+  function deleteMyPost(id) {
+    if (!isMyPost(id)) return false;
+    var list = loadAll();
+    var next = list.filter(function (c) {
+      return c.id !== id;
+    });
+    saveAll(next);
+
+    var myIds = getMyPostIds().filter(function (item) {
+      return item !== id;
+    });
+    writeJson(STORAGE_KEYS.myPosts, myIds);
+    return next.length !== list.length;
   }
 
   function getReactedMap() {
@@ -253,7 +268,7 @@
     if (REACTION_EMOJIS.indexOf(emoji) === -1) return null;
     var list = loadAll();
     var idx = list.findIndex(function (c) {
-      return c.id === confessionId && c.status === 'approved';
+      return c.id === confessionId && (!c.status || c.status === 'approved');
     });
     if (idx === -1) return null;
 
@@ -285,95 +300,15 @@
     };
   }
 
-  function reportConfession(id, reason) {
-    var list = loadAll();
-    var idx = list.findIndex(function (c) {
-      return c.id === id && c.status === 'approved';
-    });
-    if (idx === -1) return null;
-
-    var nextCount = (list[idx].report_count || 0) + 1;
-    list[idx] = Object.assign({}, list[idx], {
-      report_count: nextCount,
-      status: 'flagged',
-      moderation_reason: 'User report: ' + reason,
-    });
-    saveAll(list);
-    return list[idx];
-  }
-
-  function listAdmin(opts) {
-    var options = opts || {};
-    var status = options.status || 'all';
-    var q = (options.q || '').trim().toLowerCase();
-    var all = loadAll();
-
-    var counts = {
-      all: all.length,
-      flagged: 0,
-      pending: 0,
-      approved: 0,
-      rejected: 0,
-    };
-
-    all.forEach(function (c) {
-      if (Object.prototype.hasOwnProperty.call(counts, c.status)) {
-        counts[c.status] += 1;
-      }
-    });
-
-    var filtered =
-      status === 'all'
-        ? all.slice()
-        : all.filter(function (c) {
-            return c.status === status;
-          });
-
-    if (q) {
-      filtered = filtered.filter(function (c) {
-        return (
-          c.content.toLowerCase().indexOf(q) !== -1 ||
-          (c.moderation_reason && c.moderation_reason.toLowerCase().indexOf(q) !== -1) ||
-          (c.category && c.category.toLowerCase().indexOf(q) !== -1)
-        );
-      });
-    }
-
-    filtered.sort(function (a, b) {
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    });
-
-    return { confessions: filtered, counts: counts };
-  }
-
-  function updateConfessionAdmin(id, patch) {
-    var list = loadAll();
-    var idx = list.findIndex(function (c) {
-      return c.id === id;
-    });
-    if (idx === -1) return null;
-    list[idx] = Object.assign({}, list[idx], patch);
-    saveAll(list);
-    return list[idx];
-  }
-
-  function deleteConfession(id) {
-    var list = loadAll();
-    var next = list.filter(function (c) {
-      return c.id !== id;
-    });
-    if (next.length === list.length) return false;
-    saveAll(next);
-    return true;
-  }
-
   function getSettings() {
     return readJson(STORAGE_KEYS.settings, { aiProxyUrl: '' });
   }
 
   function saveSettings(settings) {
     writeJson(STORAGE_KEYS.settings, {
-      aiProxyUrl: (settings && settings.aiProxyUrl ? settings.aiProxyUrl : '').trim().replace(/\/+$/, ''),
+      aiProxyUrl: (settings && settings.aiProxyUrl ? settings.aiProxyUrl : '')
+        .trim()
+        .replace(/\/+$/, ''),
     });
   }
 
@@ -381,56 +316,12 @@
     return JSON.stringify(loadAll(), null, 2);
   }
 
-  function importJson(raw) {
-    var parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) {
-      throw new Error('JSON must be an array of confessions.');
-    }
-    var valid = parsed.filter(function (item) {
-      return item && typeof item.id === 'string' && typeof item.content === 'string';
-    });
-    saveAll(valid);
-    return valid.length;
-  }
-
   function resetDemoData() {
     var seeded = buildSeedConfessions();
     saveAll(seeded);
     writeJson(STORAGE_KEYS.reacted, {});
+    writeJson(STORAGE_KEYS.myPosts, []);
     return seeded;
-  }
-
-  function simpleHash(str) {
-    var h1 = 0xdeadbeef;
-    var h2 = 0x41c6ce57;
-    for (var i = 0; i < str.length; i += 1) {
-      var ch = str.charCodeAt(i);
-      h1 = Math.imul(h1 ^ ch, 2654435761);
-      h2 = Math.imul(h2 ^ ch, 1597334677);
-    }
-    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-    return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16);
-  }
-
-  function getAdminPassHash() {
-    var stored = getStorage().getItem(STORAGE_KEYS.adminPassHash);
-    if (stored) return stored;
-    var defaultHash = simpleHash('cw-salt:' + 'admin123');
-    getStorage().setItem(STORAGE_KEYS.adminPassHash, defaultHash);
-    return defaultHash;
-  }
-
-  function verifyAdminPasscode(passcode) {
-    return simpleHash('cw-salt:' + passcode) === getAdminPassHash();
-  }
-
-  function setAdminPasscode(nextPasscode) {
-    getStorage().setItem(STORAGE_KEYS.adminPassHash, simpleHash('cw-salt:' + nextPasscode));
-  }
-
-  function isAdminSignedIn() {
-    return getStorage().getItem(STORAGE_KEYS.adminSession) === 'active';
   }
 
   function getAdviceHistory() {
@@ -444,14 +335,6 @@
 
   function clearAdviceHistory() {
     getStorage().removeItem(STORAGE_KEYS.adviceHistory);
-  }
-
-  function setAdminSignedIn(active) {
-    if (active) {
-      getStorage().setItem(STORAGE_KEYS.adminSession, 'active');
-    } else {
-      getStorage().removeItem(STORAGE_KEYS.adminSession);
-    }
   }
 
   function formatRelativeTime(dateString) {
@@ -475,22 +358,15 @@
     getById: getById,
     getRandom: getRandom,
     checkPostRateLimit: checkPostRateLimit,
+    isMyPost: isMyPost,
     createConfession: createConfession,
+    deleteMyPost: deleteMyPost,
     getReactedMap: getReactedMap,
     toggleReaction: toggleReaction,
-    reportConfession: reportConfession,
-    listAdmin: listAdmin,
-    updateConfessionAdmin: updateConfessionAdmin,
-    deleteConfession: deleteConfession,
     getSettings: getSettings,
     saveSettings: saveSettings,
     exportJson: exportJson,
-    importJson: importJson,
     resetDemoData: resetDemoData,
-    verifyAdminPasscode: verifyAdminPasscode,
-    setAdminPasscode: setAdminPasscode,
-    isAdminSignedIn: isAdminSignedIn,
-    setAdminSignedIn: setAdminSignedIn,
     getAdviceHistory: getAdviceHistory,
     saveAdviceHistory: saveAdviceHistory,
     clearAdviceHistory: clearAdviceHistory,

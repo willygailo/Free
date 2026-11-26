@@ -634,78 +634,7 @@ code {
   color: var(--danger);
 }
 
-.status-badge {
-  border-radius: var(--radius-full);
-  padding: 0.18rem 0.6rem;
-  font-size: 0.68rem;
-  font-weight: 600;
-  text-transform: capitalize;
-  border: 1px solid transparent;
-}
-
-.status-flagged {
-  background: var(--warning-bg);
-  border-color: var(--warning-border);
-  color: var(--warning);
-}
-
-.status-pending {
-  background: rgba(12, 74, 110, 0.35);
-  border-color: rgba(56, 189, 248, 0.35);
-  color: #7dd3fc;
-}
-
-.status-approved {
-  background: var(--success-bg);
-  border-color: var(--success-border);
-  color: var(--success);
-}
-
-.status-rejected {
-  background: var(--danger-bg);
-  border-color: var(--danger-border);
-  color: var(--danger);
-}
-
-/* Admin & Modals */
-.login-wrap {
-  max-width: 26rem;
-  margin: 2rem auto;
-}
-
-.login-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.border-bottom-bar {
-  padding-bottom: 0.85rem;
-  border-bottom: 1px solid rgba(39, 39, 42, 0.85);
-}
-
-.admin-search {
-  max-width: 15rem;
-}
-
-.admin-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid rgba(39, 39, 42, 0.75);
-}
-
-.summary-toggle {
-  cursor: pointer;
-  font-size: 0.825rem;
-  font-weight: 500;
-  color: var(--text-muted);
-}
-
-.file-label {
-  cursor: pointer;
-}
+/* Utilities & Modals */
 
 .back-link {
   font-size: 0.78rem;
@@ -961,9 +890,6 @@ code {
 @media (max-width: 600px) {
   .hide-sm {
     display: none;
-  }
-  .admin-search {
-    max-width: 100%;
   }
   .persona-grid,
   .prompt-grid {

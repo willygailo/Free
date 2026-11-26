@@ -5,7 +5,6 @@
   var PII_EMAIL_REGEX = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i;
   var PII_PHONE_REGEX = /(?:\+?\d{1,3}[\s.-]?)?(?:\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4})\b/;
   var THREAT_HATE_REGEX = /\b(kill\s+yourself|kys|doxx\s+him|doxx\s+her|bomb\s+threat)\b/i;
-  var BORDERLINE_REGEX = /\b(hate\s+my\s+boss|want\s+to\s+disappear|revenge|exposed\s+them)\b/i;
 
   function localModerate(content) {
     var text = (content || '').trim();
@@ -13,7 +12,6 @@
     if (THREAT_HATE_REGEX.test(text)) {
       return {
         approved: false,
-        flagged: false,
         reason: 'Contains harmful or threatening language.',
       };
     }
@@ -21,7 +19,6 @@
     if (PII_EMAIL_REGEX.test(text) || PII_PHONE_REGEX.test(text)) {
       return {
         approved: false,
-        flagged: false,
         reason: 'Contains potential personal contact info (phone or email). Please keep confessions anonymous.',
       };
     }
@@ -29,20 +26,11 @@
     if (SPAM_LINK_REGEX.test(text)) {
       return {
         approved: false,
-        flagged: false,
         reason: 'Promotional links and spam are not allowed on the wall.',
       };
     }
 
-    if (BORDERLINE_REGEX.test(text)) {
-      return {
-        approved: false,
-        flagged: true,
-        reason: 'Borderline emotional or conflict content queued for human review.',
-      };
-    }
-
-    return { approved: true, flagged: false, reason: '' };
+    return { approved: true, reason: '' };
   }
 
   function localReact(content, category) {
