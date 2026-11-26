@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Moderation — Confession Wall</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <script defer src="js/store.js"></script>
+  <script defer src="js/ai.js"></script>
+  <script defer src="js/admin.js"></script>
+</head>
+<body>
+  <header class="navbar">
+    <div class="container navbar-inner">
+      <a href="index.html" class="brand">
+        <span class="brand-icon" aria-hidden="true">🔥</span>
+        <span class="brand-text">
+          <span class="brand-title">Confession Wall</span>
+          <span class="brand-subtitle">Moderation Dashboard</span>
+        </span>
+      </a>
+
+      <nav class="nav-actions">
+        <a href="index.html" class="btn btn-ghost btn-sm">← Back to Wall</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container main-content">
+    <!-- Login Gate -->
+    <section id="loginView" class="login-wrap">
+      <div class="glass-card form-card stack">
+        <div class="login-header">
+          <span class="brand-icon" aria-hidden="true">🛡️</span>
+          <div>
+            <h1 class="section-heading">Admin Access</h1>
+            <p class="muted-sub">Sign in to moderate flagged, pending, and reported confessions.</p>
+          </div>
+        </div>
+
+        <form id="adminLoginForm" class="stack-sm">
+          <label class="field-label" for="adminPasswordInput">Admin Passcode</label>
+          <input
+            type="password"
+            id="adminPasswordInput"
+            class="input"
+            placeholder="Enter admin passcode (default: admin123)"
+            required
+            autofocus
+          />
+          <p id="loginError" class="alert alert-error hidden"></p>
+          <button type="submit" class="btn btn-primary full-width">Sign In</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Moderation Dashboard -->
+    <section id="dashboardView" class="stack-lg hidden">
+      <div class="toolbar-row">
+        <div>
+          <h1 class="section-heading">Moderation Dashboard</h1>
+          <p class="muted-sub">Review AI-flagged or user-reported posts and manage wall visibility.</p>
+        </div>
+
+        <div class="toolbar-actions">
+          <button type="button" id="adminRefreshBtn" class="btn btn-secondary btn-sm">↻ Refresh</button>
+          <button type="button" id="exportJsonBtn" class="btn btn-ghost btn-sm">⬇ Export JSON</button>
+          <label class="btn btn-ghost btn-sm file-label">
+            ⬆ Import JSON
+            <input type="file" id="importJsonInput" accept="application/json" class="sr-only" />
+          </label>
+          <button type="button" id="resetDemoBtn" class="btn btn-ghost btn-sm">↺ Reset Demo</button>
+          <button type="button" id="logoutBtn" class="btn btn-ghost btn-sm">Sign Out</button>
+        </div>
+      </div>
+
+      <!-- Passcode update & status tabs -->
+      <div class="toolbar-row border-bottom-bar">
+        <div id="statusTabs" class="chip-row" role="tablist" aria-label="Moderation queues"></div>
+
+        <div class="search-wrap admin-search">
+          <span class="search-icon" aria-hidden="true">🔍</span>
+          <input
+            type="search"
+            id="adminSearchInput"
+            class="input search-input"
+            placeholder="Filter confessions..."
+            aria-label="Filter admin confessions"
+          />
+        </div>
+      </div>
+
+      <div id="adminList" class="stack"></div>
+
+      <!-- Passcode Changer -->
+      <details class="glass-card form-card">
+        <summary class="summary-toggle">🔐 Change Local Admin Passcode</summary>
+        <form id="changePasscodeForm" class="stack-sm mt-3">
+          <input
+            type="password"
+            id="newPasscodeInput"
+            class="input"
+            minlength="4"
+            required
+            placeholder="New admin passcode (min 4 characters)"
+          />
+          <button type="submit" class="btn btn-secondary btn-sm">Update Passcode</button>
+        </form>
+      </details>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <p>Confessions are anonymous. Pure HTML, CSS &amp; Vanilla JavaScript.</p>
+      <div class="footer-links">
+        <a href="index.html">Wall</a>
+        <a href="admin.html">Moderation</a>
+      </div>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+</body>
+</html>

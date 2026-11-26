@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Confession Wall — Anonymous &amp; AI-Moderated</title>
+  <meta
+    name="description"
+    content="Share anonymous confessions on a zero-dependency wall with instant AI-style moderation, reactions, search, and admin review."
+  />
+  <link rel="stylesheet" href="css/styles.css" />
+  <script defer src="js/store.js"></script>
+  <script defer src="js/ai.js"></script>
+  <script defer src="js/app.js"></script>
+</head>
+<body>
+  <header class="navbar">
+    <div class="container navbar-inner">
+      <a href="index.html" class="brand" id="brandLink">
+        <span class="brand-icon" aria-hidden="true">🔥</span>
+        <span class="brand-text">
+          <span class="brand-title">Confession Wall</span>
+          <span class="brand-subtitle">Anonymous • Vanilla HTML/CSS/JS</span>
+        </span>
+      </a>
+
+      <nav class="nav-actions" aria-label="Primary navigation">
+        <button type="button" class="btn btn-ghost btn-sm" id="surpriseBtn" title="Read a random confession">
+          <span aria-hidden="true">🔀</span>
+          <span class="hide-sm">Surprise Me</span>
+        </button>
+        <button type="button" class="btn btn-ghost btn-sm" id="settingsBtn" title="AI &amp; Storage Settings">
+          <span aria-hidden="true">⚙️</span>
+          <span class="hide-sm">Settings</span>
+        </button>
+        <a href="admin.html" class="btn btn-ghost btn-sm">
+          <span aria-hidden="true">🛡️</span>
+          <span>Admin</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container main-content">
+    <!-- Permalink View (shown when URL hash is #confession=<id>) -->
+    <section id="permalinkSection" class="stack hidden" aria-live="polite">
+      <div class="toolbar-row">
+        <a href="index.html" id="backToWallBtn" class="back-link">← Back to Confession Wall</a>
+        <div class="toolbar-actions">
+          <button type="button" class="btn btn-ghost btn-sm" id="permalinkRandomBtn">
+            🔀 Another Random
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" id="permalinkCopyBtn">
+            🔗 Share Link
+          </button>
+        </div>
+      </div>
+      <div id="permalinkContainer"></div>
+    </section>
+
+    <!-- Main Wall View -->
+    <div id="wallSection" class="stack-lg">
+      <!-- Submit Form -->
+      <section class="glass-card form-card" aria-labelledby="formHeading">
+        <div class="card-header-row">
+          <div>
+            <h1 id="formHeading" class="section-heading">Confess something anonymously</h1>
+            <p class="muted-sub">No accounts, no names. Moderated &amp; answered in real time.</p>
+          </div>
+          <span class="pill-badge hide-sm">🔒 Local &amp; Anonymous</span>
+        </div>
+
+        <form id="confessionForm" class="stack-sm" novalidate>
+          <div id="formCategoryChips" class="chip-row" role="radiogroup" aria-label="Confession category"></div>
+
+          <div>
+            <textarea
+              id="confessionInput"
+              class="textarea"
+              rows="4"
+              maxlength="1050"
+              placeholder="What's on your mind that you can't tell anyone else..."
+              aria-label="Confession text"
+            ></textarea>
+            <p id="inputError" class="field-error hidden"></p>
+          </div>
+
+          <div class="form-footer">
+            <span id="charCounter" class="char-counter">0 / 1000</span>
+            <button type="submit" id="submitBtn" class="btn btn-primary" disabled>
+              ✉️ Post Anonymously
+            </button>
+          </div>
+        </form>
+
+        <div id="formFeedback" class="alert hidden" role="status"></div>
+      </section>
+
+      <!-- Feed Controls & List -->
+      <section class="stack" aria-labelledby="feedHeading">
+        <div class="toolbar-row">
+          <div class="toolbar-title-group">
+            <h2 id="feedHeading" class="feed-heading">Latest Confessions</h2>
+            <span id="totalBadge" class="count-pill">0</span>
+            <span id="modeBadge" class="pill-badge">✨ Built-in AI • Local Storage</span>
+          </div>
+
+          <div class="toolbar-actions">
+            <div class="segmented" role="group" aria-label="Sort confessions">
+              <button type="button" class="seg-btn active" data-sort="newest">Newest</button>
+              <button type="button" class="seg-btn" data-sort="top">🔥 Top</button>
+            </div>
+            <button type="button" id="refreshBtn" class="btn btn-secondary btn-sm">
+              ↻ <span class="hide-sm">Refresh</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="stack-sm">
+          <div class="search-wrap">
+            <span class="search-icon" aria-hidden="true">🔍</span>
+            <input
+              type="search"
+              id="searchInput"
+              class="input search-input"
+              placeholder="Search confessions by keyword..."
+              aria-label="Search confessions"
+            />
+            <button type="button" id="clearSearchBtn" class="search-clear hidden" aria-label="Clear search">✕</button>
+          </div>
+
+          <div id="filterCategoryChips" class="chip-row" role="group" aria-label="Filter by category"></div>
+        </div>
+
+        <div id="confessionList" class="stack"></div>
+
+        <div id="loadMoreWrap" class="center-row hidden">
+          <button type="button" id="loadMoreBtn" class="btn btn-secondary">
+            Load More Confessions
+          </button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <p>Confessions are anonymous. Pure HTML, CSS &amp; Vanilla JavaScript.</p>
+      <div class="footer-links">
+        <a href="index.html">Wall</a>
+        <a href="admin.html">Moderation</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Report Modal -->
+  <div id="reportModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="reportTitle">
+    <div class="glass-card modal-card">
+      <div class="modal-header">
+        <h3 id="reportTitle">Report Confession</h3>
+        <button type="button" class="icon-btn" id="closeReportModal" aria-label="Close modal">✕</button>
+      </div>
+      <p class="muted-sub">Flag this post for human moderation review in the Admin dashboard.</p>
+      <form id="reportForm" class="stack-sm">
+        <input type="hidden" id="reportConfessionId" />
+        <input
+          type="text"
+          id="reportReasonInput"
+          class="input"
+          minlength="5"
+          maxlength="300"
+          required
+          placeholder="Reason (e.g., doxxing, harassment, spam)..."
+        />
+        <p id="reportError" class="field-error hidden"></p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost btn-sm" id="cancelReportBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm">Submit Report</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="glass-card modal-card">
+      <div class="modal-header">
+        <h3 id="settingsTitle">AI &amp; Storage Settings</h3>
+        <button type="button" class="icon-btn" id="closeSettingsModal" aria-label="Close settings">✕</button>
+      </div>
+      <form id="settingsForm" class="stack-sm">
+        <label class="field-label" for="aiProxyUrlInput">
+          Optional AI Proxy Base URL (e.g. <code>http://localhost:3000</code>)
+        </label>
+        <input
+          type="url"
+          id="aiProxyUrlInput"
+          class="input"
+          placeholder="Leave blank to use built-in browser AI engine"
+        />
+        <p class="muted-sub">
+          When set, posts call <code>&lt;url&gt;/api/ai/moderate</code> and <code>&lt;url&gt;/api/ai/react</code> (with automatic fallback if offline). Never put secret API keys into static JS files.
+        </p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost btn-sm" id="resetSettingsBtn">Use Built-in AI</button>
+          <button type="submit" class="btn btn-primary btn-sm">Save Settings</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+</body>
+</html>

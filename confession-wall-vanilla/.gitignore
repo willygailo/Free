@@ -1,0 +1,12 @@
+# OS & Editors
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Logs & Backups
+*.log
+confessions-backup.json
